@@ -62,7 +62,7 @@ body{background-color:#475569;font-family:Arial Black,sans-serif;overflow-x:hidd
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
 <div class="bg-white p-6 rounded-3xl border-4 border-black shadow-[10px_10px_0px_#000]">
-<h3 class="text-xl border-b-4 border-green-600 mb-4 italic uppercase">New Entry</h3>
+<h3 class="text-xl border-b-4 border-green-600 mb-4 italic uppercase">New Entry / Edit Panel</h3>
 <div class="grid grid-cols-2 gap-4">
 <input type="hidden" id="editId"><input type="date" id="eDate" class="border-2 border-black p-3 rounded-xl">
 <input type="tel" id="eMob" inputmode="numeric" placeholder="Mobile" class="border-2 border-black p-3 rounded-xl">
@@ -73,7 +73,7 @@ body{background-color:#475569;font-family:Arial Black,sans-serif;overflow-x:hidd
 </div>
 <div class="grid grid-cols-2 gap-3 mt-6">
 <button onclick="saveData()" id="saveBtn" class="w-full py-4 rounded-xl text-xl btn-style bg-green-600">SAVE ✅</button>
-<button onclick="updateData()" id="updateBtn" class="w-full py-4 rounded-xl text-xl btn-style bg-blue-600 hidden">UPDATE 🖋️</button>
+<button onclick="updateData()" id="updateBtn" class="w-full py-4 rounded-xl text-xl btn-style bg-blue-600">UPDATE 🖋️</button>
 </div>
 </div>
 
@@ -161,79 +161,61 @@ function renderUI(){
  fList.innerHTML+=`<button onclick='toggleFilter(${JSON.stringify(c)})' id="${safeBtn}" class="bg-blue-900 text-white px-3 py-1 rounded-lg btn-style text-[10px]">${escapeHTML(c)}</button>`});
 }
 function setViewMode(mode){currentViewMode=mode;document.querySelectorAll(".action-btn").forEach(btn=>btn.classList.remove("active"));document.getElementById("view"+mode).classList.add("active");refresh()}
+
 function editRow(id){
- const item=db.find(x=>String(x.id)===String(id));
- if(!item)return;
+ db=JSON.parse(localStorage.getItem("saha_v66_db"))||[];
+ const item=db.find(x => String(x.id) === String(id));
+ if(!item){
+  alert("பதிவு கிடைக்கவில்லை!");
+  return;
+ }
 
- document.getElementById("editId").value=item.id;
- document.getElementById("eDate").value=item.date;
- document.getElementById("eMob").value=item.mob==="-"?"":item.mob;
- document.getElementById("eCat").value=item.cat;
- document.getElementById("eDesc").value=item.desc==="-"?"":item.desc;
- document.getElementById("eAmt").value=item.amt;
- document.getElementById("eType").value=item.type;
-
- /*
-  EDIT MODE:
-  SAVE remains NEW ENTRY.
-  UPDATE changes only this old transaction.
- */
- document.getElementById("updateBtn").classList.remove("hidden");
+ document.getElementById("editId").value = item.id;
+ document.getElementById("eDate").value = item.date;
+ document.getElementById("eMob").value = (item.mob === "-" ? "" : item.mob);
+ document.getElementById("eCat").value = item.cat;
+ document.getElementById("eDesc").value = (item.desc === "-" ? "" : item.desc);
+ document.getElementById("eAmt").value = item.amt;
+ document.getElementById("eType").value = item.type;
 
  window.scrollTo({
-  top:0,
-  behavior:"smooth"
+  top: 0,
+  behavior: "smooth"
  });
 }
+
 function saveData(){
-
- /*
-  SAVE ALWAYS CREATES A NEW TRANSACTION.
-  Even when an old transaction is currently being edited,
-  SAVE does NOT modify that old transaction.
- */
-
  const d=document.getElementById("eDate").value;
  const a=document.getElementById("eAmt").value;
 
  if(!d||!a){
-  alert("DATE AND AMOUNT REQUIRED!");
+  alert("தேதி மற்றும் தொகை (Date & Amount) அவசியம்!");
   return;
  }
 
  const entry={
-  id:Date.now(),
-  date:d,
-  mob:document.getElementById("eMob").value.trim()||"-",
-  cat:document.getElementById("eCat").value,
-  desc:document.getElementById("eDesc").value.trim()||"-",
-  amt:parseFloat(a)||0,
-  type:document.getElementById("eType").value
+  id: Date.now(),
+  date: d,
+  mob: document.getElementById("eMob").value.trim() || "-",
+  cat: document.getElementById("eCat").value,
+  desc: document.getElementById("eDesc").value.trim() || "-",
+  amt: parseFloat(a) || 0,
+  type: document.getElementById("eType").value
  };
 
+ db=JSON.parse(localStorage.getItem("saha_v66_db"))||[];
  db.push(entry);
-
- localStorage.setItem(
-  "saha_v66_db",
-  JSON.stringify(db)
- );
+ localStorage.setItem("saha_v66_db",JSON.stringify(db));
 
  clearEntryForm();
  refresh();
+ alert("புதிய பதிவாக சேமிக்கப்பட்டது (Saved as New Entry)!");
 }
 
-
 function updateData(){
-
- /*
-  UPDATE ONLY CHANGES THE OLD TRANSACTION
-  selected through EDIT.
- */
-
  const editId=document.getElementById("editId").value;
-
  if(!editId){
-  alert("FIRST SELECT EDIT!");
+  alert("முதலில் அட்டவணையில் உள்ள பென்சில் (🖋️) குறியை அழுத்தி பதிவைத் தேர்ந்தெடுக்கவும்!");
   return;
  }
 
@@ -241,62 +223,57 @@ function updateData(){
  const a=document.getElementById("eAmt").value;
 
  if(!d||!a){
-  alert("DATE AND AMOUNT REQUIRED!");
+  alert("தேதி மற்றும் தொகை (Date & Amount) அவசியம்!");
   return;
  }
 
- const idx=db.findIndex(
-  x=>String(x.id)===String(editId)
- );
+ db=JSON.parse(localStorage.getItem("saha_v66_db"))||[];
+ const idx=db.findIndex(x => String(x.id) === String(editId));
 
- if(idx===-1){
-  alert("TRANSACTION NOT FOUND!");
+ if(idx === -1){
+  alert("பதிவு மாற்றங்களில் காணப்படவில்லை!");
   return;
  }
 
  db[idx]={
-  id:db[idx].id,
-  date:d,
-  mob:document.getElementById("eMob").value.trim()||"-",
-  cat:document.getElementById("eCat").value,
-  desc:document.getElementById("eDesc").value.trim()||"-",
-  amt:parseFloat(a)||0,
-  type:document.getElementById("eType").value
+  id: db[idx].id,
+  date: d,
+  mob: document.getElementById("eMob").value.trim() || "-",
+  cat: document.getElementById("eCat").value,
+  desc: document.getElementById("eDesc").value.trim() || "-",
+  amt: parseFloat(a) || 0,
+  type: document.getElementById("eType").value
  };
 
- localStorage.setItem(
-  "saha_v66_db",
-  JSON.stringify(db)
- );
+ localStorage.setItem("saha_v66_db",JSON.stringify(db));
 
  clearEntryForm();
  refresh();
-
- alert("TRANSACTION UPDATED!");
+ alert("பழைய பதிவு மாற்றப்பட்டுவிட்டது (Updated Successfully)!");
 }
 
-
 function clearEntryForm(){
-
  document.getElementById("editId").value="";
  document.getElementById("eAmt").value="";
  document.getElementById("eDesc").value="";
  document.getElementById("eMob").value="";
-
- document.getElementById("updateBtn")
-  .classList.add("hidden");
+ document.getElementById("eDate").value="";
 }
+
 function refresh(){
  db=JSON.parse(localStorage.getItem("saha_v66_db"))||[];db.sort((a,b)=>new Date(b.date)-new Date(a.date));
  let html="",grand=0,tempSums={};cfg.cats.forEach(c=>tempSums[c]=0);const filtered=getFilteredData();
- filtered.forEach(t=>{const amt=parseFloat(t.amt)||0,value=t.type==="CR"?amt:-amt;if(Object.prototype.hasOwnProperty.call(tempSums,t.cat))tempSums[t.cat]+=value;grand+=value;
- html+=`<tr class="border-b hover:bg-gray-100" style="font-size:${cfg.fsEnt}px"><td class="p-3">${formatDate(t.date)}</td><td class="p-3">${escapeHTML(t.mob||"-")}</td><td class="p-3">${escapeHTML(t.cat||"-")}</td><td class="p-3 text-blue-700">${escapeHTML(t.desc||"-")}</td><td class="p-3 text-right ${t.type==="CR"?"text-green-600":"text-red-600"}">₹${amt.toLocaleString("en-IN")}</td><td class="p-3"><div class="flex justify-center gap-4">${cfg.swPen?`<button onclick="editRow(${JSON.stringify(t.id)})" class="text-xl">🖋️</button>`:""}${cfg.swTrDel?`<button onclick="del(${JSON.stringify(t.id)})" class="text-xl text-red-600">✖</button>`:""}</div></td></tr>`});
+ filtered.forEach(t=>{
+  const amt=parseFloat(t.amt)||0,value=t.type==="CR"?amt:-amt;
+  if(Object.prototype.hasOwnProperty.call(tempSums,t.cat))tempSums[t.cat]+=value;
+  grand+=value;
+  const safeIdStr = String(t.id);
+  html+=`<tr class="border-b hover:bg-gray-100" style="font-size:${cfg.fsEnt}px"><td class="p-3">${formatDate(t.date)}</td><td class="p-3">${escapeHTML(t.mob||"-")}</td><td class="p-3">${escapeHTML(t.cat||"-")}</td><td class="p-3 text-blue-700">${escapeHTML(t.desc||"-")}</td><td class="p-3 text-right ${t.type==="CR"?"text-green-600":"text-red-600"}">₹${amt.toLocaleString("en-IN")}</td><td class="p-3"><div class="flex justify-center gap-4">${cfg.swPen?`<button onclick="editRow('${safeIdStr}')" class="text-xl">🖋️</button>`:""}${cfg.swTrDel?`<button onclick="del('${safeIdStr}')" class="text-xl text-red-600">✖</button>`:""}</div></td></tr>`;
+ });
  document.getElementById("resTable").innerHTML=html||`<tr><td colspan="6" class="p-8 text-red-600">NO DATA FOUND</td></tr>`;document.getElementById("mainTotal").innerText="₹"+grand.toLocaleString("en-IN");document.getElementById("recCount").innerText=filtered.length;
  cfg.cats.forEach(c=>{const safeId="sum_"+String(c).replace(/[^a-zA-Z0-9_-]/g,"_"),el=document.getElementById(safeId);if(el)el.innerText=(tempSums[c]||0).toLocaleString("en-IN")});
 }
 
-/* ONLY SEARCH/DASHBOARD FILTER LOGIC CHANGED.
-   BELL/startingDate DOES NOT control the dashboard or search. */
 function getFilteredData(){
  const fD=document.getElementById("fDate").value,tD=document.getElementById("tDate").value,sM=document.getElementById("sMob").value.replace(/\D/g,""),sDes=document.getElementById("sDesc").value.trim().toLowerCase();
  const now=new Date(),todayStr=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0"),monthStart=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
@@ -337,8 +314,6 @@ function exportData(){
 function importData(event){
  const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);if(!Array.isArray(data))throw new Error("Invalid");db=data.map(t=>({id:t.id||Date.now()+Math.random(),date:t.date||"",mob:t.mob||"-",cat:t.cat||"",desc:t.desc||"-",amt:parseFloat(t.amt)||0,type:t.type==="DR"?"DR":"CR"}));localStorage.setItem("saha_v66_db",JSON.stringify(db));refresh();alert("IMPORT SUCCESSFUL!")}catch(err){alert("INVALID JSON FILE!")}event.target.value=""};reader.readAsText(file);
 }
-
-/* BELL remains visible, but its date is NOT used for filtering. */
 function setStartingDate(){
  const v=document.getElementById("bellStartDate").value;cfg.startingDate=v||"";localStorage.setItem("saha_v66_cfg",JSON.stringify(cfg));refresh();
 }
