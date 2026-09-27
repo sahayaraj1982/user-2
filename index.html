@@ -11,7 +11,7 @@
         :root { --p-bg: #0c40bb; --n-col: #ffffff; --out: #54301d; --btm: #0b08d4; --c-let: #e32b2b; --c-num: #1e40af; }
         body { background-color: #475569; font-family: 'Arial Black', sans-serif; overflow-x: hidden; }
         * { font-weight: 950 !important; }
-        .main-app-box { border: 10px solid var(--out); margin: 10px auto; border-radius: 40px; background: #f1f5f9; overflow-x: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 95%; max-width: 1400px; }
+        .main-app-box { border: 10px solid var(--out); margin: 10px auto; border-radius: 40px; background: #f1f5f9; overflow-x: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 90% !important; max-width: 1400px; }
         .premium-header { background-color: var(--p-bg); padding: 25px; border-bottom: 10px solid var(--btm); position: relative; }
         #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: gold; text-align: center; }
         .login-box { background: #111; padding: 40px; border: 5px solid gold; border-radius: 30px; width: 90%; max-width: 400px; box-shadow: 0 0 30px gold; }
@@ -28,11 +28,6 @@
         .action-bar { display: flex; width: 100%; background: #000; padding: 8px; gap: 8px; }
         .action-btn { flex: 1; padding: 12px 0; border: 3px solid #fff; color: #fff; font-size: 14px; text-align: center; cursor: pointer; border-radius: 12px; transition: 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 #444; }
         .action-btn.active { background: #ffeb3b; color: #000; border-color: #000; box-shadow: none; transform: translateY(4px); }
-        .g-led { width: 35px; height: 35px; border-radius: 50%; background: #222; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; box-sizing: border-box; margin: 0 auto; }
-        .g-led.disconnected { color: #ff3333; border: 2px solid #ff3333; box-shadow: 0 0 15px #ff3333, inset 0 0 5px #ff3333, 0 0 5px #fff; }
-        .g-led.connected { color: #00ff00; border: 2px solid #00ff00; box-shadow: 0 0 15px #00ff00, inset 0 0 5px #00ff00, 0 0 5px #fff; }
-        @keyframes k_a9 { 50% { transform: rotateY(180deg); } }
-        .g-led.saving.a9 { animation: k_a9 1s infinite ease-in-out; transform-style: preserve-3d; }
     </style>
 </head>
 <body onload="checkAccess()">
@@ -64,12 +59,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="text-right text-white">
+                    <div id="grandTotalBox" class="text-right text-white hidden">
                         <p class="text-xs opacity-70">RECORDS: <span id="recCount" class="text-yellow-400">0</span></p>
-                        <h2 id="mainTotal" class="text-4xl" style="text-shadow: 2px 2px 0 #000;">₹0</h2>
+                        <h2 id="mainTotal" class="text-4xl" style="text-shadow: 2px 2px 0 #000;">₹***</h2>
                     </div>
                     <div class="flex flex-col items-center">
-                        <button onclick="openSettings()" class="text-5xl text-white hover:rotate-90 transition-transform">⚙️</button>
+                        <button id="settingsIconBtn" onclick="openSettings()" class="text-5xl text-white hover:rotate-90 transition-transform">⚙️</button>
                     </div>
                 </div>
             </div>
@@ -114,6 +109,7 @@
                     </div>
                     <div id="filterCatList" class="flex flex-wrap gap-2 mb-4"></div>
                     <div class="grid grid-cols-4 gap-3">
+                        <button id="monthBtn" onclick="openMonthPicker()" class="bg-indigo-600 py-3 rounded-lg btn-style text-[10px]">MONTH</button>
                         <button id="pdfBtn" onclick="downloadPDF()" class="bg-orange-600 py-3 rounded-lg btn-style text-[10px]">PDF</button>
                         <button id="waBtn" onclick="sendWhatsApp()" class="bg-green-600 py-3 rounded-lg btn-style text-[10px]">W/APP</button>
                         <button id="impBtn" onclick="document.getElementById('impFile').click()" class="bg-blue-600 py-3 rounded-lg btn-style text-[10px]">IMPORT</button>
@@ -121,6 +117,7 @@
                         <button onclick="promptAddCat()" class="bg-cyan-600 py-3 rounded-lg btn-style text-[10px]">ADD CAT</button>
                         <button onclick="promptDelCat()" class="bg-pink-600 py-3 rounded-lg btn-style text-[10px]">DEL CAT</button>
                         <button id="delAllBtn" onclick="deleteAll()" class="bg-red-600 py-3 rounded-lg btn-style text-[10px]">DEL ALL</button>
+                        <button id="toggleTotalBtn" onclick="toggleTotalVisibility()" class="bg-yellow-600 py-3 rounded-lg btn-style text-[10px]">SHOW/HIDE TOTAL</button>
                     </div>
                     <input type="file" id="impFile" class="hidden" onchange="importData(event)">
                     <button onclick="refresh()" class="w-full bg-slate-800 text-white py-4 mt-4 rounded-xl btn-style">SEARCH DATA 🔎</button>
@@ -147,6 +144,16 @@
     </div>
 </div>
 
+<div id="monthModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2">
+    <div class="bg-white w-[95%] max-w-xl rounded-3xl border-8 border-black p-5 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl uppercase">Select Month</h2>
+            <button onclick="closeMonthPicker()" class="bg-red-600 text-white px-5 py-2 rounded-xl btn-style">CLOSE</button>
+        </div>
+        <div id="monthList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+    </div>
+</div>
+
 <div id="setModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2">
     <div class="cp-card">
         <div class="flex justify-between items-center mb-4">
@@ -164,9 +171,9 @@
                 <div class="setting-row"><span>Cat Number Col</span><input type="color" id="setCatNumCol"></div>
             </div>
             <div>
-                <p class="section-title">2. Font & Sizes</p>
+                <p class="section-title">2. Font & Sizes & Controls</p>
                 <div class="setting-row"><span>Banner Name</span><input type="text" id="setTitle" class="w-24 text-[10px]"></div>
-                <div class="setting-row"><span>Date/Time Size</span><input type="number" id="setFsDT" class="w-12"></div>
+                <div class="setting-row"><span>Show Totals</span><input type="checkbox" id="swTotals"></div>
                 <div class="setting-row"><span>Cat Letter Size</span><input type="number" id="setFsCatL" class="w-12"></div>
                 <div class="setting-row"><span>Cat Number Size</span><input type="number" id="setFsCatN" class="w-12"></div>
                 <div class="setting-row"><span>Entry Font Size</span><input type="number" id="setFsEnt" class="w-12"></div>
@@ -205,12 +212,16 @@ const authKeys = {
 
 let cfg = JSON.parse(localStorage.getItem('indian_v26_cfg')) || {
     "title":"INDIAN-2026", "headCol":"#0c40bb", "nameCol":"#ffffff", "outCol":"#54301d", "btmCol":"#0b08d4", "catLetCol":"#e32b2b", "catNumCol":"#1e40af",
-    "scrW":95, "fsDT":22, "fsCatL":14, "fsCatN":28, "fsEnt":14,
+    "scrW":90, "fsDT":22, "fsCatL":14, "fsCatN":28, "fsEnt":14,
     "swBack":true, "swDate":true, "swClock":true, "swPen":true, "swTrDel":true, "swAllDel":true, "swPdf":true, "swWa":true, "swImp":true, "swExp":true,
+    "showTotals":false,
     "adminPin":"1020", "loginPin":"1002",
     "cats":["FINANCE", "TICKET", "RO", "OTHER"]
 };
 
+// ஆப் ஒவ்வொருமுறை திறக்கும் பொழுதும் பேலன்ஸ் மறைக்கப்பட வேண்டும் (showTotals = false)
+cfg.showTotals = false;
+cfg.scrW = 90;
 if(!cfg.cats || cfg.cats.length === 0) cfg.cats = ["FINANCE", "TICKET", "RO", "OTHER"];
 
 let db = [];
@@ -220,9 +231,6 @@ let currentViewMode = "CR";
 function checkAccess() {
     const login = document.getElementById('loginOverlay');
     const app = document.getElementById('appPage');
-
-    // Login state மட்டும் session-ல் இருந்தால் Dashboard திறக்கும்.
-    // இல்லையெனில் Login Page எப்போதும் தெளிவாக காட்டப்படும்.
     const isLogged = sessionStorage.getItem('indian_auth') === 'true';
 
     if (isLogged) {
@@ -250,7 +258,7 @@ function verifyPass() {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appPage').classList.remove('invisible');
             loadLocalData();
-            } else {
+        } else {
             err.innerText = "PASSWORD EXPIRED ON " + authKeys[pin].split('-').reverse().join('/');
             err.classList.remove('hidden');
         }
@@ -262,13 +270,7 @@ function verifyPass() {
 
 function normalizeMobile(value) {
     if (value === null || value === undefined) return "";
-    let n = String(value)
-        .trim()
-        .replace(/\s+/g, "")
-        .replace(/-/g, "")
-        .replace(/\(/g, "")
-        .replace(/\)/g, "")
-        .replace(/\./g, "");
+    let n = String(value).trim().replace(/\s+/g, "").replace(/-/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/\./g, "");
     if (n.startsWith("+91")) n = n.substring(3);
     if (n.startsWith("0091")) n = n.substring(4);
     n = n.replace(/\D/g, "");
@@ -293,7 +295,6 @@ function cleanDate(dateStr) {
             return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
         }
     }
-
     let d = new Date(str);
     if(!isNaN(d.getTime())) {
         let year = d.getFullYear();
@@ -342,7 +343,7 @@ function init() {
     document.documentElement.style.setProperty('--c-num', cfg.catNumCol);
 
     const main = document.getElementById('mainContainer');
-    if(main) main.style.width = cfg.scrW + "%";
+    if(main) main.style.width = "90%";
 
     document.getElementById('dispTitle').innerText = cfg.title;
     document.getElementById('backBtn').style.display = cfg.swBack ? 'block' : 'none';
@@ -357,8 +358,26 @@ function init() {
 
     document.getElementById('liveDateTime').style.display = (cfg.swDate || cfg.swClock) ? 'block' : 'none';
 
+    updateTotalsUIVisibility();
     startClock();
     renderUI();
+    refresh();
+}
+
+function updateTotalsUIVisibility() {
+    const grandBox = document.getElementById('grandTotalBox');
+    if (grandBox) {
+        if (cfg.showTotals) {
+            grandBox.classList.remove('hidden');
+        } else {
+            grandBox.classList.add('hidden');
+        }
+    }
+}
+
+function toggleTotalVisibility() {
+    cfg.showTotals = !cfg.showTotals;
+    updateTotalsUIVisibility();
     refresh();
 }
 
@@ -397,7 +416,7 @@ function renderUI() {
         grid.innerHTML += `
             <div class="cat-card">
                 <p style="font-size:${cfg.fsCatL}px; color:var(--c-let)">${escapeHtml(c)}</p>
-                <h3 style="font-size:${cfg.fsCatN}px; color:var(--c-num)">₹<span id="sum_${safeCat}">0</span></h3>
+                <h3 style="font-size:${cfg.fsCatN}px; color:var(--c-num)">₹<span id="sum_${safeCat}">***</span></h3>
             </div>`;
         eSel.innerHTML += `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`;
         fList.innerHTML += `<button onclick="toggleFilterByValue(this)" data-cat="${escapeAttr(c)}" class="bg-blue-900 text-white px-3 py-1 rounded-lg btn-style text-[10px]">${escapeHtml(c)}</button>`;
@@ -458,7 +477,6 @@ function saveData() {
     const a = document.getElementById('eAmt').value;
     if(!d || !a) return alert("DATE AND AMOUNT REQUIRED!");
 
-    // SAVE always creates a NEW entry, even when the form was opened by EDIT.
     const entry = buildEntry(String(Date.now()));
     db.push(entry);
     saveLocalData();
@@ -476,7 +494,6 @@ function updateData() {
     if(!editId) return alert("முதலில் EDIT செய்யவும்!");
     if(!d || !a) return alert("DATE AND AMOUNT REQUIRED!");
 
-    // UPDATE changes ONLY the existing entry.
     const idx = db.findIndex(x => String(x.id) === String(editId));
     if(idx === -1) return alert("Record not found for update!");
 
@@ -490,8 +507,6 @@ function updateData() {
 }
 
 function refresh() {
-    // Latest entry must always appear first. For entries on the same date,
-    // use the entry id (created from Date.now()) so 4,3,2,1 order is preserved.
     db.sort((a, b) => {
         const dateDiff = new Date(cleanDate(b.date)) - new Date(cleanDate(a.date));
         if (dateDiff !== 0) return dateDiff;
@@ -505,19 +520,8 @@ function refresh() {
     const monthYearStr = now.toLocaleDateString('ta-IN', { month: 'long', year: 'numeric' });
     document.getElementById('currentMonthDisplay').innerText = monthYearStr;
 
-    let html = "", grand = 0;
-    let tempSums = {};
-    cfg.cats.forEach(c => tempSums[c] = 0);
-
+    let html = "";
     const filtered = getFilteredData();
-
-    filtered.forEach(t => {
-        const amt = parseFloat(t.amt) || 0;
-        const itemType = (t.type && t.type.toUpperCase() === "DR") ? "DR" : "CR";
-        const v = itemType === "CR" ? amt : -amt;
-        if(Object.prototype.hasOwnProperty.call(tempSums, t.cat)) tempSums[t.cat] += v;
-        grand += v;
-    });
 
     filtered.forEach(t => {
         const amt = parseFloat(t.amt) || 0;
@@ -541,13 +545,39 @@ function refresh() {
     });
 
     document.getElementById('resTable').innerHTML = html;
-    document.getElementById('mainTotal').innerText = "₹" + grand.toLocaleString();
+
+    let grandTotal = 0;
+    let catTotals = {};
+    cfg.cats.forEach(c => catTotals[c] = 0);
+
+    filtered.forEach(t => {
+        const amt = parseFloat(t.amt) || 0;
+        const itemType = (t.type && t.type.toUpperCase() === "DR") ? "DR" : "CR";
+        const signedAmt = itemType === "CR" ? amt : -amt;
+        grandTotal += signedAmt;
+        if(catTotals[t.cat] !== undefined) {
+            catTotals[t.cat] += signedAmt;
+        }
+    });
+
+    if (cfg.showTotals) {
+        document.getElementById('mainTotal').innerText = "₹" + grandTotal.toLocaleString();
+    } else {
+        document.getElementById('mainTotal').innerText = "₹***";
+    }
+    
     document.getElementById('recCount').innerText = filtered.length;
 
     cfg.cats.forEach(c => {
         const safeCat = String(c).replace(/[^a-zA-Z0-9_-]/g, '_');
         const el = document.getElementById('sum_' + safeCat);
-        if(el) el.innerText = (tempSums[c] || 0).toLocaleString();
+        if(el) {
+            if (cfg.showTotals) {
+                el.innerText = (catTotals[c] || 0).toLocaleString();
+            } else {
+                el.innerText = "***";
+            }
+        }
     });
 }
 
@@ -570,6 +600,8 @@ function getFilteredData() {
         let mDate = false;
         if (fD || tD) {
             mDate = ((!fD || cleanTDate >= fD) && (!tD || cleanTDate <= tD));
+        } else if (sM !== "" || sDes !== "") {
+            mDate = true;
         } else {
             mDate = (cleanTDate >= firstDayCurrentMonth && cleanTDate <= lastDayCurrentMonth);
         }
@@ -587,6 +619,37 @@ function getFilteredData() {
     });
 }
 
+function openMonthPicker() {
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const list = document.getElementById('monthList');
+    list.innerHTML = monthNames.map((name, index) =>
+        `<button onclick="showMonthTransactions(${index})"
+            class="bg-indigo-600 text-white py-4 rounded-xl btn-style text-sm">${name}</button>`
+    ).join('');
+
+    document.getElementById('monthModal').classList.remove('hidden');
+}
+
+function closeMonthPicker() {
+    document.getElementById('monthModal').classList.add('hidden');
+}
+
+function showMonthTransactions(monthIndex) {
+    const year = new Date().getFullYear();
+    const firstDay = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
+
+    document.getElementById('fDate').value = firstDay;
+    document.getElementById('tDate').value = lastDay;
+
+    closeMonthPicker();
+    refresh();
+}
+
 function openSettings() {
     document.getElementById('setModal').classList.remove('hidden');
     document.getElementById('setHeadCol').value = cfg.headCol;
@@ -596,11 +659,11 @@ function openSettings() {
     document.getElementById('setCatLetCol').value = cfg.catLetCol;
     document.getElementById('setCatNumCol').value = cfg.catNumCol;
     document.getElementById('setTitle').value = cfg.title;
-    document.getElementById('setFsDT').value = cfg.fsDT;
+    document.getElementById('swTotals').checked = cfg.showTotals;
     document.getElementById('setFsCatL').value = cfg.fsCatL;
     document.getElementById('setFsCatN').value = cfg.fsCatN;
     document.getElementById('setFsEnt').value = cfg.fsEnt;
-    document.getElementById('setScrW').value = cfg.scrW;
+    document.getElementById('setScrW').value = 90;
     document.getElementById('swBack').checked = cfg.swBack;
     document.getElementById('swDate').checked = cfg.swDate;
     document.getElementById('swClock').checked = cfg.swClock;
@@ -619,11 +682,11 @@ function saveSettings() {
     cfg.catLetCol = document.getElementById('setCatLetCol').value;
     cfg.catNumCol = document.getElementById('setCatNumCol').value;
     cfg.title = document.getElementById('setTitle').value;
-    cfg.fsDT = parseInt(document.getElementById('setFsDT').value) || 22;
+    cfg.showTotals = document.getElementById('swTotals').checked;
     cfg.fsCatL = parseInt(document.getElementById('setFsCatL').value) || 14;
     cfg.fsCatN = parseInt(document.getElementById('setFsCatN').value) || 28;
     cfg.fsEnt = parseInt(document.getElementById('setFsEnt').value) || 14;
-    cfg.scrW = parseInt(document.getElementById('setScrW').value) || 95;
+    cfg.scrW = 90;
     cfg.swBack = document.getElementById('swBack').checked;
     cfg.swDate = document.getElementById('swDate').checked;
     cfg.swClock = document.getElementById('swClock').checked;
@@ -721,7 +784,6 @@ async function deleteAll() {
     );
 
     if(fileNameInput === null) return;
-
     const finalName = fileNameInput.trim() !== "" ? fileNameInput.trim() : "Backup_All";
 
     const ok = confirm("Backup file பெயர்:\n" + finalName + ".json\n\nஇந்த backup download செய்த பிறகு ALL DATA-வை delete செய்ய OK கொடுக்கவும்.");
@@ -786,8 +848,6 @@ function downloadPDF() {
         return alert("PDF table library not loaded. Please refresh the page and try again.");
     }
 
-    // Always use the same filtered data shown by the application.
-    // Latest entry first: newest date/time/id appears at the top.
     const filtered = getFilteredData().slice().sort((a, b) => {
         const ad = new Date(a.date || 0).getTime();
         const bd = new Date(b.date || 0).getTime();
@@ -808,7 +868,6 @@ function downloadPDF() {
         return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
     };
 
-    // Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text(String(cfg.title || 'INDIA-2026'), 148.5, 13, { align: 'center' });
@@ -817,9 +876,9 @@ function downloadPDF() {
     doc.text('Transaction Report', 148.5, 19, { align: 'center' });
     doc.text('Generated: ' + new Date().toLocaleString('en-IN'), 287, 19, { align: 'right' });
 
-    // Correct category summary: each category is calculated only from that category.
+    let grandCredit = 0;
+    let grandDebit = 0;
     const summaryRows = [];
-    let grandTotal = 0;
     const categories = Array.isArray(cfg.cats) ? cfg.cats : [];
 
     categories.forEach(cat => {
@@ -828,11 +887,11 @@ function downloadPDF() {
         const credit = catRows.reduce((sum, t) => sum + (String(t.type).toUpperCase() === 'CR' ? Number(t.amt || 0) : 0), 0);
         const debit  = catRows.reduce((sum, t) => sum + (String(t.type).toUpperCase() === 'DR' ? Number(t.amt || 0) : 0), 0);
         const balance = credit - debit;
-        grandTotal += balance;
-        summaryRows.push([cleanText(cat), money(credit), money(debit), money(balance)]);
+        grandCredit += credit;
+        grandDebit += debit;
+        summaryRows.push([cleanText(cat), cfg.showTotals ? money(credit) : 'Rs. ***', cfg.showTotals ? money(debit) : 'Rs. ***', cfg.showTotals ? money(balance) : 'Rs. ***']);
     });
 
-    // Summary table
     doc.autoTable({
         startY: 25,
         margin: { left: 10, right: 10 },
@@ -861,9 +920,8 @@ function downloadPDF() {
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text(`GRAND BALANCE: ${money(grandTotal)}`, 10, y);
+    doc.text(`GRAND BALANCE: ${cfg.showTotals ? money(grandCredit - grandDebit) : 'Rs. ***'}`, 10, y);
 
-    // Full transaction list, newest first.
     const transactionRows = filtered.map((t, index) => [
         String(index + 1),
         dateText(t.date),
@@ -880,18 +938,8 @@ function downloadPDF() {
         head: [['#', 'DATE', 'MOBILE', 'CATEGORY', 'REMARK', 'TYPE', 'AMOUNT']],
         body: transactionRows.length ? transactionRows : [['', '', '', '', 'NO TRANSACTIONS', '', '']],
         theme: 'grid',
-        styles: {
-            font: 'helvetica',
-            fontSize: 7,
-            cellPadding: 2,
-            overflow: 'linebreak',
-            valign: 'middle'
-        },
-        headStyles: {
-            fontStyle: 'bold',
-            halign: 'center',
-            valign: 'middle'
-        },
+        styles: { font: 'helvetica', fontSize: 7, cellPadding: 2, overflow: 'linebreak', valign: 'middle' },
+        headStyles: { fontStyle: 'bold', halign: 'center', valign: 'middle' },
         columnStyles: {
             0: { cellWidth: 10, halign: 'center' },
             1: { cellWidth: 25, halign: 'center' },
@@ -908,7 +956,6 @@ function downloadPDF() {
         }
     });
 
-    // Footer on every page without disturbing the table.
     const totalPages = doc.getNumberOfPages();
     for (let page = 1; page <= totalPages; page++) {
         doc.setPage(page);
@@ -922,20 +969,14 @@ function downloadPDF() {
 }
 
 function sendWhatsApp() {
+    let tot = 0;
     const filtered = getFilteredData();
-    let msg = `*${cfg.title} SUMMARY*\\n`;
-    let grand = 0;
-
-    cfg.cats.forEach(c => {
-        let s = 0;
-        filtered.forEach(t => {
-            if(t.cat === c) s += (t.type === "CR" ? parseFloat(t.amt) : -parseFloat(t.amt));
-        });
-        if(s !== 0) msg += `\\n${c}: ₹${s.toLocaleString()}`;
-        grand += s;
+    filtered.forEach(t => {
+        const amt = parseFloat(t.amt) || 0;
+        const itemType = (t.type && t.type.toUpperCase() === "DR") ? "DR" : "CR";
+        tot += (itemType === "CR" ? amt : -amt);
     });
-
-    msg += `\\n\\n*TOTAL: ₹${grand.toLocaleString()}*`;
+    const msg = `*${cfg.title} SUMMARY*\\nTOTAL RECORDS: ${filtered.length}\\nTOTAL BALANCE: ${cfg.showTotals ? 'Rs. ' + tot.toLocaleString() : 'Rs. ***'}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
